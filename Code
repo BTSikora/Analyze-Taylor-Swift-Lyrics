@@ -80,3 +80,15 @@ from sklearn.feature_extraction import text
 skl_stop = text.ENGLISH_STOP_WORDS
 print(skl_stop)
 
+#creating a new column to reflect if the lyrics contain midnight
+lyrics['midnight'] = lyrics['clean_lyric'].str.contains('midnight')
+sum(lyrics['midnight'])
+lyrics.head()
+
+#night, day, and other time-related words
+night = ['night','midnight', 'dawn', 'dusk', 'evening', 'late', 'dark', '1am', '2am', '3am', '4am', 
+         'sunset','moonlight','nights','midnights','evenings']
+day = ['day', 'morning', 'light', 'sun', 'dawn', 'noon', 'golden', 'bright','sunrise','days', 
+       'mornings','sunrises','lights']
+time = ['today', 'tomorrow', 'yesterday']
+
