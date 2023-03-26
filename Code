@@ -92,3 +92,148 @@ day = ['day', 'morning', 'light', 'sun', 'dawn', 'noon', 'golden', 'bright','sun
        'mornings','sunrises','lights']
 time = ['today', 'tomorrow', 'yesterday']
 
+
+###since we have so many words to alternates we can create a general expression which gives you night|midnight|dawn etc
+night_regex = '|'.join(night)
+day_regex = '|'.join(day)
+time_regex = '|'.join(time)
+
+#creating a new column for each category of words
+lyrics['night'] = lyrics['clean_lyric'].str.contains(night_regex)
+lyrics['day'] = lyrics['clean_lyric'].str.contains(day_regex)
+lyrics['time'] = lyrics['clean_lyric'].str.contains(time_regex)
+
+#count the number of times each category of word appears in the lyrics
+'''
+'night','day','time' are the column names from the previous code 
+'''
+sum(lyrics['night'])
+sum(lyrics['day'])
+sum(lyrics['time'])
+#print the count of each word category
+
+print(sum(lyrics['night']), #245 lines of mentions
+sum(lyrics['day']), #363
+sum(lyrics['time'])) #35
+
+#create a new dataframe for yearly mentions that groups mentions by year
+'''
+basically it says: copy lyrics DF and group it by album_year and 
+takes the sum of the rest of the remaining columns and reset index
+'''
+yearly_mentions = lyrics.groupby('album_year').sum().reset_index()
+yearly_mentions
+
+#plot the mentions of night over years
+yearly_mentions.plot(x = 'album_year', y =['midnight','night','day','time'])
+
+#reinstate the album name
+#read the album_year_name.csv
+year_name = pd.read_csv('album_year_name.csv')
+
+#sort both dataframes by year
+yearly_mentions.sort_values(by='album_year', ascending=True, inplace=True, ignore_index=True)
+year_name.sort_values(by='album_year', ascending=True, inplace=True, ignore_index=True)
+
+#add the new column for album name
+yearly_mentions['album_name'] = year_name['album_name']
+yearly_mentions
+
+#sort the lyrics by the night column to find the albums with the most night references
+yearly_mentions.sort_values(by = 'night',ascending=False, inplace=True, ignore_index=True)
+yearly_mentions
+
+#sort the lyrics by the day column to find the albums with the most day references
+yearly_mentions.sort_values(by = 'day',ascending=False, inplace=True,ignore_index=True)
+yearly_mentions
+
+#create a plot with one line showing number of night references by year 
+#and another line with the number of day references by year
+yearly_mentions.sort_values(by = 'album_year',ascending=True, inplace=True,ignore_index=True)
+yearly_mentions.plot(x = 'album_year', y =(['night','day']))
+
+#create a position variable that includes both the track number and line number
+lyrics['position'] = lyrics['track_n'] + (lyrics['line']/1000)
+'''
+just verifying 26.045
+lyrics.sort_values(by = 'position', ascending = True, inplace=True)
+'''
+lyrics
+#create a new DataFrame that is grouped by position
+positional_mentions = lyrics.groupby('position').sum().reset_index()
+positional_mentions
+
+#increase the size of the plot 
+fig = plt.gcf()
+fig.set_size_inches(25,10)
+
+#create a plot with two lines to show frequency of day vs. night references by position in the album
+#positional_mentions.plot(x= 'position', y = ['night', 'day'])
+plt.plot(positional_mentions['position'], positional_mentions['night'], label = 'night')
+plt.plot(positional_mentions['position'], positional_mentions['day'], label = 'day')
+plt.legend()
+plt.show()
+
+import nltk
+nltk.download('punkt')
+#run this cell to tokenize the words in the clean_lyric column
+lyrics['lyrics_tok'] = lyrics['clean_lyric'].apply(lambda x: word_tokenize(x))
+
+#determine what words overall are the most frequently used words
+#create a list of all the words in the lyrics_tok column
+word_list = [word for list_ in lyrics['lyrics_tok'] for word in list_]
+
+#use the counter function to count the number of times each word appears
+word_frequency = collections.Counter(word_list)
+#sort the word frequencies to find out the most common words she's used. 
+word_frequency = sorted(word_frequency.items(), key=lambda x: x[1], reverse=True)
+#call the word frequency
+word_frequency
+
+#run this cell to add a package from NLTK for our sentiment analyzer.
+nltk.download('vader_lexicon')
+
+#run this cell to see how the sentiment analyzer works
+sia = SentimentIntensityAnalyzer()
+sia.polarity_scores("I love Taylor Swift!")
+
+#create a new column called polarity and apply the sia method to the clean_lyric column with a lambda expression
+lyrics['polarity'] = lyrics['clean_lyric'].apply(lambda x: sia.polarity_scores(x))
+lyrics.head()
+
+#run this cell to transform the polarity dictionary into columns of the DataFrame
+lyrics[['neg', 'neu', 'pos', 'compound']] = lyrics['polarity'].apply(pd.Series)
+lyrics.drop('polarity', axis=1)
+
+#calculate overall sentiment for pos, neg, sentiment
+## YOUR CODE HERE ##
+pos = sum(lyrics['pos'])
+neg = sum(lyrics['neg'])
+compound = sum(lyrics['compound'])
+#print the overall sentiments
+print(pos,neg,compound)
+
+#create a new DataFrame using the groupby method for the album_year
+yearly_sentiment = lyrics.groupby('album_year').sum().reset_index()
+yearly_sentiment
+
+#visualize sentiment over time 
+plt.plot(yearly_sentiment['album_year'], yearly_sentiment['pos'], label = 'Positive')
+plt.plot(yearly_sentiment['album_year'], yearly_sentiment['neg'], label = 'Negative')
+plt.plot(yearly_sentiment['album_year'], yearly_sentiment['compound'], label = 'Compound')
+plt.legend()
+
+#create a DataFrame filtered for only night mentions
+night = lyrics[lyrics['night'] == True]
+#create a DataFrame filtered for only day mentions
+day = lyrics[lyrics['day'] == True]
+#print the length of the night and day DataFrames
+print(len(night), len(day))
+
+#calculate the sentiment of each day and night DataFrame from the compound values
+night_sentiment = night['compound'].sum()
+day_sentiment = day['compound'].sum()
+
+#print the results
+print(night_sentiment, day_sentiment)
+
