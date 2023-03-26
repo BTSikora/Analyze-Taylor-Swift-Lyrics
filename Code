@@ -1,0 +1,26 @@
+%matplotlib inline
+
+import pandas as pd
+import string
+import seaborn as sns
+import matplotlib.pyplot as plt
+import collections
+import nltk
+import numpy as np
+from nltk.tokenize import word_tokenize
+from nltk.sentiment import SentimentIntensityAnalyzer
+
+
+# load dataset with all TS previous albums
+lyrics = pd.read_csv("taylor_swift_lyrics_2006-2020_all.csv")
+
+#inspect the first few rows
+lyrics.head(20)
+
+#get info about the DataFrame
+lyrics.info()
+
+# get a list of all the albums in this collection
+albums = lyrics['album_name'].unique()
+albums
+
