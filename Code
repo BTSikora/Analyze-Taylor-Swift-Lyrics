@@ -24,3 +24,59 @@ lyrics.info()
 albums = lyrics['album_name'].unique()
 albums
 
+# this is a function to map the name of the album to the year it was released
+def album_release(row):  
+    if row['album_name'] == 'Taylor Swift':
+        return '2006'
+    elif row['album_name'] == 'Fearless (Taylor’s Version)':
+        return '2008'
+    elif row['album_name'] == 'Speak Now (Deluxe)':
+        return '2010'
+    elif row['album_name'] == 'Red (Deluxe Edition)':
+        return '2012'
+    elif row['album_name'] == '1989 (Deluxe)':
+        return '2014'
+    elif row['album_name'] == 'reputation':
+        return '2017'
+    elif row['album_name'] == 'Lover':
+        return '2019'
+    elif row['album_name'] == 'folklore (deluxe version)':
+        return '2020'
+    #we know folklore was actually released in Dec 2020, but this will make our analysis easier
+    elif row['album_name'] == 'evermore (deluxe version)':
+        return '2021'
+    #this is slightly differently formatted because the album name is recorded two ways.
+    elif 'midnights' in row['album_name']:
+        return '2022'
+    
+    return 'No Date'
+    
+# apply the above function to the album
+lyrics['album_year']=lyrics.apply(lambda row: album_release(row), axis=1)
+# inspect the first few rows of the DataFrame
+lyrics.head(20)
+
+#lowercase
+lyrics['clean_lyric'] = lyrics['lyric'].apply(lambda s:s.lower())
+#remove punctuation
+lyrics['clean_lyric']= lyrics['clean_lyric'].str.replace('[^\w\s]','')
+
+#remove stopwords
+#creating a small list of English stop words
+stop = ['the', 'a', 'this', 'that', 'to', 'is', 'am', 'was', 'were', 'be', 'being', 'been', 'i', 'me', 'your', 'our', 
+        'few', 'before', 'her', 'him', 'she', 's', 'hers', 'his']
+
+
+#there are three steps in one here
+#we make a list of words with `.split()`
+#then we remove all the words in our list
+#then we join the words back together into a string
+lyrics['clean_lyric'] = lyrics['clean_lyric'].apply(lambda x: ' '.join([word for word in x.split() if word not in (stop)]))
+#' ' is a separator
+
+#there are many pre-built lists of stopwords, including one from sklearn.
+#Most exclude too many words to be appropriate for song lyric analysis.
+from sklearn.feature_extraction import text
+skl_stop = text.ENGLISH_STOP_WORDS
+print(skl_stop)
+
